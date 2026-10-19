@@ -124,6 +124,12 @@ const variantMap: Record<Difficulty, "default" | "secondary" | "destructive"> = 
 <Badge variant={variantMap[difficulty]}>{difficulty}</Badge>
 ```
 
+## Theming (Light / Dark)
+
+- `next-themes` is configured in `components/providers/ThemeProvider.tsx` (class strategy, **default theme: `dark`**, system option enabled)
+- Theme tokens live in `app/globals.css` (`:root` for light, `.dark` for dark) — use semantic tokens (`bg-background`, `text-foreground`, `bg-card`, `text-muted-foreground`, …) instead of hard-coded colors
+- The switcher is `components/layout/ThemeToggle.tsx` (rendered in `Header`)
+
 ## Component Directory Conventions
 
 | Folder | Purpose |

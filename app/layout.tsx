@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
@@ -16,11 +17,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jakarta.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jakarta.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="h-full">
-        <ClerkProvider appearance={{ theme: shadcn }}>
-          <QueryProvider>{children}</QueryProvider>
-        </ClerkProvider>
+        <ThemeProvider>
+          <ClerkProvider appearance={{ theme: shadcn }}>
+            <QueryProvider>{children}</QueryProvider>
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
