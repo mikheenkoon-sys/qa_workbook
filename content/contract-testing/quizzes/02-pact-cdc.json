@@ -1,0 +1,63 @@
+{
+  "slug": "contract-testing-pact-cdc",
+  "title": "Consumer-driven contracts и Pact",
+  "description": "Pact consumer tests, interactions, pact-файл и matchers.",
+  "difficulty": "INTERMEDIATE",
+  "questions": [
+    {
+      "text": "Что происходит в Pact consumer test?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "Provider обязательно разворачивается в production", "isCorrect": false },
+        { "text": "Тест запускает настоящий браузер", "isCorrect": false },
+        { "text": "Consumer вызывает mock provider, соответствующий заданным interactions", "isCorrect": true },
+        { "text": "Контракт вручную пишется только в PDF", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Когда обычно формируется Pact-файл?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 2,
+      "options": [
+        { "text": "Только при деплое provider", "isCorrect": false },
+        { "text": "После успешного запуска consumer test", "isCorrect": true },
+        { "text": "Перед созданием теста", "isCorrect": false },
+        { "text": "Из Swagger автоматически при любом запуске", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Что описывает interaction Pact?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 3,
+      "options": [
+        { "text": "Только название теста", "isCorrect": false },
+        { "text": "Только переменные окружения", "isCorrect": false },
+        { "text": "Лишь сценарий UI", "isCorrect": false },
+        { "text": "Ожидаемый запрос и соответствующий ответ", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Что лучше использовать для динамического id в ответе?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "Всегда фиксированное значение id=1", "isCorrect": false },
+        { "text": "Игнорировать весь ответ", "isCorrect": false },
+        { "text": "Matcher с требованием к типу/формату", "isCorrect": true },
+        { "text": "Использовать произвольную строку без условий", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Почему не стоит добавлять в контракт каждое поле ответа без необходимости?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 5,
+      "options": [
+        { "text": "Это запрещено HTTP", "isCorrect": false },
+        { "text": "Pact не поддерживает JSON", "isCorrect": false },
+        { "text": "Контракт перестаёт иметь consumer", "isCorrect": false },
+        { "text": "Контракт становится хрупким к безвредным изменениям", "isCorrect": true }
+      ]
+    }
+  ]
+}

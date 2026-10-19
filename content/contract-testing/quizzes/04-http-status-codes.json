@@ -1,0 +1,63 @@
+{
+  "slug": "contract-testing-http",
+  "title": "HTTP, API и статус-коды",
+  "description": "HTTP status codes и элементы запроса, важные для контракта.",
+  "difficulty": "BEGINNER",
+  "questions": [
+    {
+      "text": "Что обозначает HTTP 200?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "Отсутствует авторизация", "isCorrect": false },
+        { "text": "Внутренняя ошибка сервера", "isCorrect": false },
+        { "text": "Ресурс не найден", "isCorrect": false },
+        { "text": "Успешная обработка запроса", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Что обозначает HTTP 401?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 2,
+      "options": [
+        { "text": "Любой баг в сервере", "isCorrect": false },
+        { "text": "Отсутствуют или недействительны учётные данные", "isCorrect": true },
+        { "text": "Успешное создание ресурса", "isCorrect": false },
+        { "text": "Неверный HTTP method в любом случае", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Что обозначает HTTP 403?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 3,
+      "options": [
+        { "text": "Provider успешно вернул тело ответа", "isCorrect": false },
+        { "text": "Запрос перенаправлен", "isCorrect": false },
+        { "text": "Аутентификация может быть успешной, но доступ запрещён", "isCorrect": true },
+        { "text": "Сервер не работает", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Чем 400 обычно отличается от 500?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "Оба всегда означают успех", "isCorrect": false },
+        { "text": "400 — ошибка сервера; 500 — редирект", "isCorrect": false },
+        { "text": "Различий нет", "isCorrect": false },
+        { "text": "400 — ошибка запроса клиента; 500 — внутренняя ошибка сервера", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Какие части запроса важны для контракта?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 5,
+      "options": [
+        { "text": "Метод, путь, необходимые headers, query/body", "isCorrect": true },
+        { "text": "Только цвет UI", "isCorrect": false },
+        { "text": "Только длительность пайплайна", "isCorrect": false },
+        { "text": "Только количество git commits", "isCorrect": false }
+      ]
+    }
+  ]
+}

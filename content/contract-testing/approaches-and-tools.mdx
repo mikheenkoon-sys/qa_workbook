@@ -1,0 +1,60 @@
+# Подходы и инструменты
+
+Contract testing — это не один инструмент, а семейство подходов. Важно понимать, чем они отличаются и когда какой выбирать.
+
+## Consumer-driven vs provider-driven
+
+| | Consumer-driven (CDC) | Provider-driven |
+|---|---|---|
+| Кто пишет контракт | **Consumer** — описывает, что ему нужно | **Provider** — публикует спецификацию (например, OpenAPI) |
+| Что в контракте | Только используемое consumer'ом | Весь API provider |
+| Кто проверяет | Provider проверяет все контракты consumers | Consumers проверяют, что не выходят за спецификацию |
+| Сильная сторона | Provider видит, что **реально** используется и что можно безопасно менять | Просто, подходит для публичных API |
+| Слабая сторона | Нужна дисциплина и инфраструктура (broker) | Не видно, кто и что реально использует |
+
+**Consumer-driven contracts (CDC)** — основной сценарий Pact. Главная идея: *provider не может сломать то, что consumers реально используют, и при этом свободен менять всё остальное*.
+
+## Contract testing vs schema validation
+
+Это разные вещи, хотя их часто путают.
+
+- **Schema validation (OpenAPI/JSON Schema)** — проверка, что ответ соответствует *общей* схеме API. Схема описывает, **что может** вернуть provider.
+- **Contract testing** — проверка, что provider отвечает так, как **ожидают конкретные consumers**. Контракт описывает, **что нужно** consumer'у.
+
+Схема может позволять поле `nickname` (опциональное), но consumer может на него полагаться — и тогда схема этого не поймает, а контракт поймает.
+
+## Bi-directional contract testing
+
+Современный компромисс (поддерживается PactFlow):
+
+1. **Consumer** генерирует контракт (например, Pact из mock-тестов).
+2. **Provider** публикует свою OpenAPI-спецификацию, подтверждённую собственными тестами.
+3. Платформа **сравнивает** контракт consumer с OpenAPI provider и сообщает о несовместимости.
+
+Плюс: provider не обязан писать state handlers и запускать verification. Минус: проверка идёт против *схемы*, а не реального поведения.
+
+## Инструменты
+
+| Инструмент | Язык / стек | Особенности |
+|------------|-------------|-------------|
+| **Pact** | JS/TS, JVM, .NET, Go, Python, Ruby, Rust, PHP | Де-факто стандарт CDC, много языков, Pact Broker |
+| **PactFlow** | SaaS поверх Pact | Bi-directional contracts, управление командами, UI |
+| **Spring Cloud Contract** | JVM / Spring | Контракты на Groovy/YAML, **provider-driven**, генерирует stubs |
+| **Postman Contract Tests** | любой | Проверка ответа по OpenAPI-схеме |
+| **Specmatic** | любой | Контракты на основе OpenAPI/AsyncAPI, генерация тестов и stubs |
+| **Dredd** | любой | Проверка API на соответствие OpenAPI/API Blueprint |
+
+> В этой главе мы фокусируемся на **Pact** с TypeScript — это самый распространённый вариант для QA-инженеров, пишущих тесты на JS/TS.
+
+## Как выбрать
+
+- Много микросервисов, независимые команды, нужен контроль «что можно деплоить» → **Pact + Pact Broker / PactFlow**.
+- Spring-экосистема, команды дружат с JVM → **Spring Cloud Contract** или Pact JVM.
+- Есть качественный OpenAPI и мало consumers → **schema validation** или **bi-directional**.
+- Публичный API с неизвестными consumers → **OpenAPI + schema validation**, дополнительно версионирование.
+
+## Итоги
+
+- CDC — consumer описывает ожидания, provider обязан им соответствовать.
+- Schema validation и contract testing решают разные задачи и дополняют друг друга.
+- Pact — стандарт для CDC; Pact Broker/PactFlow организует процесс между командами.

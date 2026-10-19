@@ -1,0 +1,123 @@
+# Pact Broker и рабочий процесс
+
+Передавать pact-файлы вручную (копировать JSON между репозиториями) работает только в учебном проекте. В реальной жизни для этого используют **Pact Broker** (open source) или **PactFlow** (SaaS на его основе).
+
+## Что делает Pact Broker
+
+- **Хранит** контракты всех пар consumer ↔ provider.
+- **Хранит результаты** provider verification для каждой версии.
+- Знает, **какие версии** каких сервисов задеплоены в какое окружение.
+- Отвечает на вопрос **«можно ли деплоить?»** (`can-i-deploy`).
+- Рисует **граф зависимостей** между сервисами.
+- Запускает **webhooks** — например, дёргает CI provider'а, когда consumer опубликовал новый контракт.
+
+## Полный цикл
+
+```
+1. Consumer CI:  запуск consumer tests  → pact-файл
+2. Consumer CI:  publish pact           → Pact Broker (версия = git SHA)
+3. Broker:       webhook                → запускает CI provider'а
+4. Provider CI:  verification           → результат публикуется в Broker
+5. Consumer CI:  can-i-deploy           → «безопасно ли деплоить web-app?»
+6. Deploy:       record-deployment      → Broker знает, что версия в production
+```
+
+## Версионирование
+
+Каждый pact и каждая верификация привязываются к **версии участника**. Рекомендация: версия = **git commit SHA**. Дополнительно указывается **ветка** — это позволяет отличать контракты из feature-веток от main.
+
+| Понятие | Что означает |
+|---------|--------------|
+| **Version** | Уникальная версия приложения (обычно SHA) |
+| **Branch** | Ветка, из которой собрана версия |
+| **Environment** | Окружение (`test`, `staging`, `production`), куда версия задеплоена |
+
+## Публикация контрактов
+
+```bash
+pact-broker publish ./pacts \
+  --consumer-app-version "$GIT_SHA" \
+  --branch "$GIT_BRANCH" \
+  --broker-base-url "$PACT_BROKER_BASE_URL" \
+  --broker-token "$PACT_BROKER_TOKEN"
+```
+
+Токен и URL — **секреты CI**, а не часть репозитория.
+
+## Публикация результатов верификации
+
+Provider публикует результаты, чтобы Broker знал, совместима ли версия:
+
+```typescript
+const verifier = new Verifier({
+  provider: "loan-service",
+  providerBaseUrl: "http://localhost:8080",
+  pactBrokerUrl: process.env.PACT_BROKER_BASE_URL,
+  pactBrokerToken: process.env.PACT_BROKER_TOKEN,
+  providerVersion: process.env.GIT_SHA,
+  providerVersionBranch: process.env.GIT_BRANCH,
+  publishVerificationResult: process.env.CI === "true",
+  consumerVersionSelectors: [
+    { mainBranch: true },
+    { deployedOrReleased: true },
+  ],
+  enablePending: true,
+  stateHandlers: { /* ... */ },
+});
+```
+
+Публиковать результаты нужно **только из CI**, а не при локальных запусках — иначе Broker получит «мусорные» результаты.
+
+## Consumer version selectors
+
+Provider не обязан проверять **все** контракты за всю историю. Selectors указывают, какие версии consumers важны:
+
+| Selector | Что выбирает |
+|----------|--------------|
+| `mainBranch: true` | Последние контракты из основной ветки consumers |
+| `deployedOrReleased: true` | Версии consumers, **реально находящиеся** в окружениях |
+| `matchingBranch: true` | Контракты из ветки с тем же именем, что и у provider |
+
+Комбинация `mainBranch + deployedOrReleased` защищает и от поломки будущей версии, и от поломки той, что уже работает в production.
+
+## Pending pacts и WIP pacts
+
+Когда consumer публикует **новый** контракт, который provider пока не поддерживает, его верификация упадёт и заблокирует CI provider'а, хотя виноват не он.
+
+- **Pending pacts** (`enablePending: true`) — пока контракт ни разу не проходил верификацию, его падение **не ломает** сборку provider'а (результат виден, но build зелёный).
+- **WIP pacts** (`includeWipPactsSince: "2025-01-01"`) — provider автоматически подхватывает контракты из feature-веток, которые ещё не вошли в main.
+
+## can-i-deploy
+
+Главная «killer-фича» Broker'а:
+
+```bash
+pact-broker can-i-deploy \
+  --pacticipant web-app \
+  --version "$GIT_SHA" \
+  --to-environment production
+```
+
+Команда смотрит в матрицу верификаций и отвечает: **все ли provider'ы в production** подтвердили контракты этой версии `web-app`. Если нет — команда завершается с ненулевым кодом и **блокирует деплой**.
+
+После успешного деплоя фиксируем факт:
+
+```bash
+pact-broker record-deployment \
+  --pacticipant web-app \
+  --version "$GIT_SHA" \
+  --environment production
+```
+
+Без `record-deployment` Broker не узнает, что версия в production, и `can-i-deploy` будет работать вслепую.
+
+## Webhooks
+
+Когда consumer публикует новый или изменённый контракт, Broker может автоматически запустить верификацию у provider'а (`contract_requiring_verification_published`). Так provider узнаёт о новых ожиданиях **сразу**, а не при следующем коммите.
+
+## Итоги
+
+- Broker — центральное хранилище контрактов и результатов верификации.
+- Версия = git SHA; всегда передавайте ветку.
+- Selectors + pending/WIP pacts делают процесс стабильным.
+- `can-i-deploy` + `record-deployment` превращают контракты в **gate** на деплой.

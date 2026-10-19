@@ -16,10 +16,12 @@ content/
   <chapter-slug>/
     meta.ts          ← chapter + article metadata (title, description, order)
     <article>.mdx    ← article body (MDX format)
-    questions.ts     ← quiz questions for the chapter (used to seed the DB)
+    quizzes/
+      <quiz>.json    ← one quiz per file (used to seed the DB)
 
 lib/content.ts       ← chapter registry (import & register meta.ts here)
 lib/mdx.ts           ← reads .mdx files from disk with gray-matter
+lib/quiz-schema.ts   ← Zod schema validating quiz JSON files
 ```
 
 ## Core Rules
@@ -77,16 +79,40 @@ const example = "code";
 - Custom MDX components can be registered in `MDXContent`'s `components` prop
 - Prose styles come from `@tailwindcss/typography` (`prose` class)
 
-### 5. questions.ts Shape
-- Used to seed quizzes for the chapter into the database
+### 5. Quiz JSON Shape
+- One file per quiz: `content/<slug>/quizzes/<quiz>.json`
+- `prisma/seed.ts` reads every `*.json` in that folder (sorted by filename) and validates it with `QuizSchema` from `@/lib/quiz-schema` — invalid files fail the seed with a descriptive error
 - Each question maps to `QuestionType.MULTIPLE_CHOICE` or `TRUE_FALSE`
+- Rules enforced: exactly one correct option per question, `TRUE_FALSE` has exactly two options, `order` is unique within a quiz
+- Questions are only inserted when a quiz has none in the DB; editing existing questions requires resetting them in the DB
+
+```json
+{
+  "slug": "my-chapter-intro",
+  "title": "Introduction Quiz",
+  "description": "Short description.",
+  "difficulty": "BEGINNER",
+  "questions": [
+    {
+      "text": "Question text?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "Wrong", "isCorrect": false },
+        { "text": "Right", "isCorrect": true }
+      ]
+    }
+  ]
+}
+```
 
 ## Adding a New Chapter — Checklist
 
 - [ ] Create `content/<slug>/` directory
 - [ ] Create `content/<slug>/meta.ts` with valid `ChapterMeta`
 - [ ] Create at least one `.mdx` article matching a slug in `meta.ts`
-- [ ] Create `content/<slug>/questions.ts` with quiz questions
+- [ ] Create `content/<slug>/quizzes/<quiz>.json` files with quiz questions
+- [ ] Make sure the chapter exists in the `chapters` array in `prisma/seed.ts`
 - [ ] Register the meta in `lib/content.ts`
 - [ ] Seed the database: `npx prisma db seed`
 

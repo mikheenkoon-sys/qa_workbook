@@ -1,7 +1,29 @@
 import { PrismaClient } from "@prisma/client";
-import { quizzes as copilotQuizzes } from "../content/github-copilot/questions";
+import fs from "node:fs";
+import path from "node:path";
+import { QuizSchema, type QuizData } from "../lib/quiz-schema";
 
 const prisma = new PrismaClient();
+const CONTENT_DIR = path.join(process.cwd(), "content");
+
+// Loads and validates content/<chapter-slug>/quizzes/*.json
+function loadQuizzes(chapterSlug: string): QuizData[] {
+  const dir = path.join(CONTENT_DIR, chapterSlug, "quizzes");
+  if (!fs.existsSync(dir)) return [];
+
+  return fs
+    .readdirSync(dir)
+    .filter((file) => file.endsWith(".json"))
+    .sort()
+    .map((file) => {
+      const raw: unknown = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
+      const result = QuizSchema.safeParse(raw);
+      if (!result.success) {
+        throw new Error(`Invalid quiz file ${chapterSlug}/quizzes/${file}:\n${result.error.message}`);
+      }
+      return result.data;
+    });
+}
 
 const chapters = [
   { slug: "github-copilot",        title: "GitHub Copilot Tool",           description: "Learn to use GitHub Copilot, an AI-powered coding assistant.", icon: "🤖", order: 1  },
@@ -14,6 +36,7 @@ const chapters = [
   { slug: "performance-testing",   title: "Performance & Load Testing",     description: "k6, JMeter, Gatling — measuring and validating system performance.", icon: "⚡", order: 8  },
   { slug: "security-testing",      title: "Security Testing Basics",        description: "OWASP Top 10, Burp Suite introduction, and security test techniques.", icon: "🔒", order: 9  },
   { slug: "mobile-testing",        title: "Mobile Testing",                 description: "Appium, device farms, and mobile-specific test strategies.", icon: "📱", order: 10 },
+  { slug: "contract-testing",      title: "Contract Testing",               description: "Consumer-driven contracts, Pact, provider verification и CI/CD.", icon: "🤝", order: 11 },
 ];
 
 async function main() {
@@ -26,38 +49,43 @@ async function main() {
     });
   }
 
-  console.log("Seeding GitHub Copilot quizzes…");
-  const copilotChapter = await prisma.chapter.findUniqueOrThrow({
-    where: { slug: "github-copilot" },
-  });
+  for (const chapter of chapters) {
+    const quizzes = loadQuizzes(chapter.slug);
+    if (quizzes.length === 0) continue;
 
-  for (const quiz of copilotQuizzes) {
-    const created = await prisma.quiz.upsert({
-      where: { slug: quiz.slug },
-      update: {},
-      create: {
-        chapterId:   copilotChapter.id,
-        slug:        quiz.slug,
-        title:       quiz.title,
-        description: quiz.description,
-        difficulty:  quiz.difficulty,
-      },
+    console.log(`Seeding ${chapter.title} quizzes…`);
+    const dbChapter = await prisma.chapter.findUniqueOrThrow({
+      where: { slug: chapter.slug },
     });
 
-    // Only seed questions if none exist yet
-    const existing = await prisma.question.count({ where: { quizId: created.id } });
-    if (existing > 0) continue;
-
-    for (const q of quiz.questions) {
-      await prisma.question.create({
-        data: {
-          quizId: created.id,
-          text:   q.text,
-          type:   q.type,
-          order:  q.order,
-          options: { create: q.options },
+    for (const quiz of quizzes) {
+      const created = await prisma.quiz.upsert({
+        where: { slug: quiz.slug },
+        update: {},
+        create: {
+          chapterId:   dbChapter.id,
+          slug:        quiz.slug,
+          title:       quiz.title,
+          description: quiz.description,
+          difficulty:  quiz.difficulty,
         },
       });
+
+      // Only seed questions if none exist yet
+      const existing = await prisma.question.count({ where: { quizId: created.id } });
+      if (existing > 0) continue;
+
+      for (const q of quiz.questions) {
+        await prisma.question.create({
+          data: {
+            quizId: created.id,
+            text:   q.text,
+            type:   q.type,
+            order:  q.order,
+            options: { create: q.options },
+          },
+        });
+      }
     }
   }
 

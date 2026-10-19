@@ -1,0 +1,198 @@
+# Pact: consumer tests
+
+**Pact** — самый популярный инструмент для **consumer-driven contract testing**. В этой статье — как написать consumer test на TypeScript и что при этом получается на выходе.
+
+## Общая схема
+
+```
+Consumer test ──► mock provider ──► pact-файл (JSON) ──► Pact Broker ──► Provider verification
+```
+
+1. В consumer test вы описываете **interactions**.
+2. Pact поднимает **mock provider** — локальный HTTP-сервер, отвечающий по этим interactions.
+3. Реальный код consumer (HTTP-клиент) обращается к mock-серверу, а не к настоящему provider.
+4. Если все interactions отработали, Pact записывает **pact-файл**.
+
+> Consumer test проверяет **ваш клиентский код**: правильно ли он формирует запрос и разбирает ответ. Он **не** проверяет provider.
+
+## Установка
+
+```bash
+npm install --save-dev @pact-foundation/pact
+```
+
+## Тестируемый клиент
+
+Пусть consumer — это простой API-клиент:
+
+```typescript
+// src/loan-client.ts
+export interface Loan {
+  id: number;
+  status: string;
+  amount: number;
+}
+
+export class LoanClient {
+  constructor(private readonly baseUrl: string) {}
+
+  async getLoan(id: number): Promise<Loan> {
+    const response = await fetch(`${this.baseUrl}/loans/${id}`, {
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+    return (await response.json()) as Loan;
+  }
+}
+```
+
+## Consumer test
+
+```typescript
+// tests/loan-client.pact.test.ts
+import path from "node:path";
+import { PactV3, MatchersV3 } from "@pact-foundation/pact";
+import { LoanClient } from "../src/loan-client";
+
+const { integer, string, like } = MatchersV3;
+
+const provider = new PactV3({
+  consumer: "web-app",
+  provider: "loan-service",
+  dir: path.resolve(process.cwd(), "pacts"),
+});
+
+describe("LoanClient", () => {
+  it("returns a loan by id", async () => {
+    provider
+      .given("loan 123 exists")
+      .uponReceiving("a request for loan 123")
+      .withRequest({
+        method: "GET",
+        path: "/loans/123",
+        headers: { Accept: "application/json" },
+      })
+      .willRespondWith({
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: {
+          id: integer(123),
+          status: string("ACTIVE"),
+          amount: like(1000),
+        },
+      });
+
+    await provider.executeTest(async (mockServer) => {
+      const client = new LoanClient(mockServer.url);
+      const loan = await client.getLoan(123);
+
+      expect(loan.id).toBe(123);
+      expect(loan.status).toBe("ACTIVE");
+    });
+  });
+});
+```
+
+Что здесь происходит:
+
+| Часть | Назначение |
+|-------|------------|
+| `consumer` / `provider` | Имена участников — по ним контракт найдёт Pact Broker |
+| `dir` | Куда записать pact-файл |
+| `given(...)` | **Provider state** — предусловие для provider |
+| `uponReceiving(...)` | Описание interaction (должно быть уникальным в контракте) |
+| `withRequest(...)` | Какой запрос ожидает mock provider |
+| `willRespondWith(...)` | Какой ответ он вернёт |
+| `executeTest(...)` | Запускает mock-сервер и ваш клиентский код |
+
+## Matchers
+
+Контракт — не снимок конкретных данных. Если жёстко зашить `id = 1`, тест будет проверять не форму, а конкретное значение. **Matchers** задают правило по типу или формату.
+
+| Matcher | Смысл | Пример |
+|---------|-------|--------|
+| `like(value)` | Тот же **тип**, значение любое | `like(1000)` — любое число |
+| `integer(n)` | Любое целое | `integer(123)` |
+| `decimal(n)` | Число с дробной частью | `decimal(10.5)` |
+| `string(s)` | Любая строка | `string("ACTIVE")` |
+| `boolean(b)` | true / false | `boolean(true)` |
+| `regex(re, example)` | Строка по регулярному выражению | `regex(/^[A-Z]{3}$/, "USD")` |
+| `uuid(example)` | UUID | `uuid()` |
+| `datetime(fmt, example)` | Дата/время по формату | `datetime("yyyy-MM-dd", "2025-01-31")` |
+| `eachLike(item)` | Массив, каждый элемент похож на item | `eachLike(loanShape)` |
+| `email(example)` | Email | `email()` |
+
+Пример массива и вложенного объекта:
+
+```typescript
+body: {
+  items: eachLike({
+    id: integer(1),
+    currency: regex(/^[A-Z]{3}$/, "USD"),
+    createdAt: datetime("yyyy-MM-dd'T'HH:mm:ss'Z'", "2025-01-31T10:00:00Z"),
+  }),
+  total: integer(1),
+}
+```
+
+Правило выбора: **значение** фиксируем только там, где оно часть контракта (например, статус `"ACTIVE"`, если consumer ветвится по нему). Всё остальное — matchers.
+
+## Как выглядит pact-файл
+
+После успешного теста в `pacts/web-app-loan-service.json` появляется JSON:
+
+```json
+{
+  "consumer": { "name": "web-app" },
+  "provider": { "name": "loan-service" },
+  "interactions": [
+    {
+      "description": "a request for loan 123",
+      "providerStates": [{ "name": "loan 123 exists" }],
+      "request": { "method": "GET", "path": "/loans/123" },
+      "response": {
+        "status": 200,
+        "body": { "id": 123, "status": "ACTIVE", "amount": 1000 },
+        "matchingRules": { "body": { "$.id": { "match": "integer" } } }
+      }
+    }
+  ],
+  "metadata": { "pactSpecification": { "version": "3.0.0" } }
+}
+```
+
+В нём есть примеры значений (`body`) и правила сравнения (`matchingRules`). Pact-файл **не надо править руками** — он генерируется тестами.
+
+## Негативные сценарии consumer'а
+
+Контракт должен покрывать не только «счастливый путь», но и ошибки, которые consumer **обрабатывает**:
+
+```typescript
+provider
+  .given("loan 999 does not exist")
+  .uponReceiving("a request for a missing loan")
+  .withRequest({ method: "GET", path: "/loans/999" })
+  .willRespondWith({ status: 404 });
+
+await provider.executeTest(async (mockServer) => {
+  const client = new LoanClient(mockServer.url);
+  await expect(client.getLoan(999)).rejects.toThrow("404");
+});
+```
+
+Если consumer не отличает 404 от 500 — не нужно описывать оба. Добавляйте только то поведение, от которого реально зависит клиентский код.
+
+## Частые ошибки
+
+- **Тестируют mock, а не клиент.** Если в тесте нет вызова реального клиентского кода — контракт бесполезен.
+- **Жёсткие значения** вместо matchers — контракт ломается от безобидных изменений.
+- **Слишком много полей** — контракт фиксирует то, что consumer не использует.
+- **Неуникальные описания** `uponReceiving` — Pact не сможет различить interactions.
+
+## Итоги
+
+- Consumer test = реальный клиентский код + mock provider + запись pact-файла.
+- Используйте matchers, фиксируйте только то, что действительно нужно consumer'у.
+- Pact-файл — артефакт, который уходит на сторону provider (напрямую или через Pact Broker).

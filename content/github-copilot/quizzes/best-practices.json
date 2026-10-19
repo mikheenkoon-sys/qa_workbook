@@ -1,0 +1,57 @@
+{
+  "slug": "github-copilot-best-practices",
+  "title": "Best Practices Quiz",
+  "description": "Test your knowledge of effective prompting, privacy, security, and limitations.",
+  "difficulty": "INTERMEDIATE",
+  "questions": [
+    {
+      "text": "Writing descriptive comments before your code helps GitHub Copilot generate more accurate suggestions.",
+      "type": "TRUE_FALSE",
+      "order": 1,
+      "options": [
+        { "text": "True", "isCorrect": true },
+        { "text": "False", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "GitHub Copilot can browse the internet in real time to fetch up-to-date documentation.",
+      "type": "TRUE_FALSE",
+      "order": 2,
+      "options": [
+        { "text": "True", "isCorrect": false },
+        { "text": "False", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Opening related files (interfaces, utilities, examples) in your editor gives Copilot more context for better suggestions.",
+      "type": "TRUE_FALSE",
+      "order": 3,
+      "options": [
+        { "text": "True", "isCorrect": true },
+        { "text": "False", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Which of the following is a known limitation of GitHub Copilot?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "It only works with JavaScript and TypeScript", "isCorrect": false },
+        { "text": "Its training data has a cutoff date, so it may suggest deprecated APIs", "isCorrect": true },
+        { "text": "It requires a minimum of 100 lines of code before generating suggestions", "isCorrect": false },
+        { "text": "It can only produce single-line completions", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "What is the recommended best practice when using GitHub Copilot for security-critical code?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 5,
+      "options": [
+        { "text": "Accept all suggestions without review since AI accuracy is very high", "isCorrect": false },
+        { "text": "Never use Copilot for any backend code", "isCorrect": false },
+        { "text": "Always review, test, and fully understand every suggestion before accepting it", "isCorrect": true },
+        { "text": "Only use Copilot for frontend UI code", "isCorrect": false }
+      ]
+    }
+  ]
+}

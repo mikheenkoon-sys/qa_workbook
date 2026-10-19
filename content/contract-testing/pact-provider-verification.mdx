@@ -1,0 +1,134 @@
+# Pact: provider verification
+
+Provider verification — вторая половина contract testing. Pact берёт pact-файл consumer'а, **воспроизводит каждую interaction на реальном provider** и сравнивает фактические ответы с ожидаемыми.
+
+## Что проверяется
+
+Для каждой interaction Pact:
+
+1. Вызывает **state handler** (готовит данные).
+2. Отправляет на provider запрос из контракта.
+3. Сравнивает ответ: **status**, **headers**, **body** (с учётом matchers).
+
+Если provider возвращает `500` вместо ожидаемого `200`, верификация **не пройдёт** — фактический статус противоречит контракту.
+
+## Provider запускается, а зависимости — нет
+
+Provider verification — это **не** E2E. Поднимается только сам provider (часто локально или в CI), а его внешние зависимости (БД, другие сервисы) заменяются **тестовыми дублями** или управляемой тестовой БД. Окружение должно быть **детерминированным и управляемым**.
+
+## Пример verification-теста
+
+```typescript
+// tests/loan-service.pact.verify.test.ts
+import { Verifier } from "@pact-foundation/pact";
+import { startServer, stopServer, seedLoan, clearLoans } from "./test-helpers";
+
+describe("loan-service provider verification", () => {
+  let baseUrl: string;
+
+  beforeAll(async () => {
+    baseUrl = await startServer({ port: 8080 });
+  });
+
+  afterAll(async () => {
+    await stopServer();
+  });
+
+  it("honours all pacts from consumers", async () => {
+    const verifier = new Verifier({
+      provider: "loan-service",
+      providerBaseUrl: baseUrl,
+      pactUrls: ["./pacts/web-app-loan-service.json"],
+      stateHandlers: {
+        "loan 123 exists": async () => {
+          await seedLoan({ id: 123, status: "ACTIVE", amount: 1000 });
+        },
+        "loan 999 does not exist": async () => {
+          await clearLoans();
+        },
+      },
+    });
+
+    await verifier.verifyProvider();
+  });
+});
+```
+
+`verifyProvider()` возвращает Promise: если хотя бы одна interaction не прошла, он **rejected**, и тест падает.
+
+## Provider states
+
+Interaction часто предполагает данные: «загружен кредит № 123». **Provider state** — это текстовое имя предусловия (`given("loan 123 exists")`), а **state handler** — код на стороне provider, который это предусловие создаёт.
+
+Правила:
+
+- Имя state должно **точно совпадать** в consumer test и в `stateHandlers`.
+- State handler должен быть **идемпотентным** — повторный вызов не ломает данные.
+- Готовьте минимум данных, необходимых именно для этой interaction.
+- Если нужна очистка — используйте `afterEach` у state handler или пересоздавайте БД между interactions.
+
+Состояния можно параметризовать:
+
+```typescript
+// consumer
+provider.given("a loan exists", { id: 123, status: "ACTIVE" });
+
+// provider
+stateHandlers: {
+  "a loan exists": async (params) => {
+    await seedLoan(params as { id: number; status: string });
+  },
+},
+```
+
+## Как читать ошибки verification
+
+Типичное сообщение выглядит так:
+
+```
+Verifying a pact between web-app and loan-service
+  a request for loan 123
+    returns a response which
+      has status code 200 (FAILED)
+      has a matching body (FAILED)
+
+Failures:
+  1) Verifying a pact between web-app and loan-service - a request for loan 123
+     1.1) has a matching body
+            $.amount -> Expected 'amount' but was missing
+     1.2) has status code 200
+            expected 200 but was 500
+```
+
+Алгоритм разбора:
+
+| Симптом | Вероятная причина |
+|---------|-------------------|
+| `status 500` вместо `200` | Ошибка provider или **не создан provider state** |
+| `404` при существующем ресурсе | State handler не отработал / неправильные данные |
+| `Expected 'x' but was missing` | Provider убрал или переименовал поле — **breaking change** |
+| `Expected type string but got number` | Изменился тип поля |
+| `No state handler found for ...` | Имя state не совпадает с consumer'ом |
+| `401` | Provider требует авторизацию — нужен `requestFilter` (см. статью про auth) |
+
+## Несовместимое (breaking) изменение
+
+**Breaking change** — это изменение, после которого provider больше не удовлетворяет ожиданиям действующего consumer. Примеры: удалено или переименовано поле, изменён тип, статус или путь.
+
+Не ломают контракт: добавление **новых** полей в ответ, изменение полей, которые consumer не использует, переименование ветки git, изменение UI.
+
+## Какая сторона «виновата»
+
+Если verification упала, это не обязательно ошибка provider:
+
+- Provider **сломал** поведение, которым пользовался consumer → чинит provider (или договариваются о миграции).
+- Consumer **придумал** ожидание, которого provider не обещал → правят контракт на стороне consumer.
+
+Именно поэтому contract testing — это ещё и **инструмент коммуникации** между командами.
+
+## Итоги
+
+- Verification проверяет реальный provider против pact-файла consumer'а.
+- Provider states подготавливают данные; их имена должны совпадать.
+- Окружение должно быть детерминированным, внешние зависимости — под контролем.
+- Падение verification — сигнал обсудить изменение, а не повод «подкрутить тесты».

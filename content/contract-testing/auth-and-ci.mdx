@@ -1,0 +1,136 @@
+# requestFilter, аутентификация и CI/CD
+
+## Проблема: provider требует авторизацию
+
+Pact-файл не должен содержать реальных токенов, но настоящий provider при verification потребует валидный `Authorization`. Для этого в Pact JS есть **`requestFilter`** — Express-middleware, который изменяет **исходящий verification request** перед отправкой provider.
+
+```typescript
+const verifier = new Verifier({
+  provider: "loan-service",
+  providerBaseUrl: "http://localhost:8080",
+  pactUrls: ["./pacts/web-app-loan-service.json"],
+  requestFilter: (req, res, next) => {
+    req.headers["authorization"] = `Bearer ${process.env.PACT_VERIFICATION_TOKEN}`;
+    next();
+  },
+});
+```
+
+> Имена HTTP-заголовков в Node.js приходят в **нижнем регистре**: используйте `req.headers["authorization"]`, а не `"Authorization"`.
+
+## Ловушка: безусловная подмена токена
+
+Если заменять **любой** `Authorization` header на валидный токен, то негативные сценарии (с намеренно неверным токеном) начнут **ложно проходить или проверять не то**: provider получит валидные credentials и вернёт `200` вместо ожидаемого `401`.
+
+### Решение: условный requestFilter
+
+Используйте специально помеченный **sentinel**-токен и не трогайте его:
+
+```typescript
+const INVALID_TOKEN_SENTINEL = "Bearer invalid-token-for-contract";
+
+requestFilter: (req, res, next) => {
+  if (req.headers["authorization"] !== INVALID_TOKEN_SENTINEL) {
+    req.headers["authorization"] = `Bearer ${getVerificationToken()}`;
+  }
+  next();
+},
+```
+
+В consumer test негативный сценарий описывается с тем же sentinel:
+
+```typescript
+provider
+  .uponReceiving("a request with an invalid token")
+  .withRequest({
+    method: "GET",
+    path: "/loans/123",
+    headers: { Authorization: "Bearer invalid-token-for-contract" },
+  })
+  .willRespondWith({ status: 401 });
+```
+
+Так позитивные interactions получают рабочий токен, а сценарий «401 при неверных credentials» остаётся честным.
+
+## Токен, который меняется
+
+Если verification token меняется (например, раз в неделю), **не вписывайте его в тесты и не коммитьте в pact-файл**. Получайте токен из:
+
+- переменных окружения CI;
+- secret manager (Vault, AWS Secrets Manager и т. п.);
+- механизма выпуска токена прямо в `requestFilter` (запрос к auth-сервису с кэшированием).
+
+`requestFilter` отделяет контракт от способа получения credentials, но **сам по себе токены не обновляет**.
+
+## Что **нельзя** делать с credentials
+
+| Плохо | Почему |
+|-------|--------|
+| Писать реальный токен в consumer test | Он попадёт в pact-файл и в Broker |
+| Коммитить токен в репозиторий | Утечка секрета |
+| Отключать авторизацию в production для тестов | Дыра в безопасности |
+| Использовать production-токены | Тесты не должны иметь доступа к боевым данным |
+
+Для verification заводите **тестового пользователя** с минимальными правами в изолированном окружении.
+
+## Contract testing в CI/CD
+
+Что полезно запускать в pipeline:
+
+1. **Consumer tests** — формируют pact-файл.
+2. **Публикация pact** в Pact Broker с версией и веткой.
+3. **Provider verification** — проверка pact на каждой сборке provider'а.
+4. **Контроль совместимости** — `can-i-deploy` перед деплоем.
+5. **`record-deployment`** после успешного деплоя.
+
+### Пример: GitHub Actions для consumer
+
+```yaml
+name: consumer-contracts
+on: [push]
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    env:
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run test:pact
+      - name: Publish pacts
+        run: >
+          npx pact-broker publish ./pacts
+          --consumer-app-version ${{ github.sha }}
+          --branch ${{ github.ref_name }}
+      - name: Can I deploy?
+        if: github.ref_name == 'main'
+        run: >
+          npx pact-broker can-i-deploy
+          --pacticipant web-app
+          --version ${{ github.sha }}
+          --to-environment production
+```
+
+### Пример: provider
+
+```yaml
+      - run: npm run test:pact:verify   # Verifier с publishVerificationResult: true
+        env:
+          CI: "true"
+          GIT_SHA: ${{ github.sha }}
+          GIT_BRANCH: ${{ github.ref_name }}
+```
+
+CI даёт раннее предупреждение о несовместимых изменениях между сервисами — до того, как они попадут в production.
+
+## Итоги
+
+- `requestFilter` меняет verification request, но не должен ломать негативные auth-сценарии.
+- Заголовки в Node.js — в нижнем регистре.
+- Токены берите из окружения/secret manager, а не из кода и не из pact-файла.
+- В CI запускайте consumer tests, публикацию pact и provider verification с контролем совместимости.

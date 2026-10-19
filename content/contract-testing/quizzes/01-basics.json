@@ -1,0 +1,63 @@
+{
+  "slug": "contract-testing-basics",
+  "title": "Основы Contract Testing",
+  "description": "Basics: consumer, provider, контракт и отличие от E2E-тестов.",
+  "difficulty": "BEGINNER",
+  "questions": [
+    {
+      "text": "Какую проблему в первую очередь решает contract testing?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "Заменяет E2E-тесты во всех случаях", "isCorrect": false },
+        { "text": "Проверяет соответствие взаимодействия двух сервисов согласованному API-контракту", "isCorrect": true },
+        { "text": "Измеряет скорость фронтенда", "isCorrect": false },
+        { "text": "Проверяет только CSS", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Кто такой consumer?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 2,
+      "options": [
+        { "text": "Компонент, который обслуживает API", "isCorrect": false },
+        { "text": "CI-сервер", "isCorrect": false },
+        { "text": "Компонент, который вызывает API", "isCorrect": true },
+        { "text": "Только конечный пользователь", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Кто такой provider?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 3,
+      "options": [
+        { "text": "Тестовый фреймворк", "isCorrect": false },
+        { "text": "Разработчик интерфейса", "isCorrect": false },
+        { "text": "Браузер", "isCorrect": false },
+        { "text": "Компонент, предоставляющий API", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Чем contract testing отличается от E2E?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "Всегда требует реальной базы данных", "isCorrect": false },
+        { "text": "Проверяет только UI", "isCorrect": false },
+        { "text": "Проверяет границу взаимодействия, а не весь пользовательский сценарий", "isCorrect": true },
+        { "text": "Всегда медленнее E2E", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Почему passing consumer test не доказывает совместимость с реальным provider?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 5,
+      "options": [
+        { "text": "Потому что consumer test всегда игнорирует статус HTTP", "isCorrect": false },
+        { "text": "Consumer test обычно использует mock provider; настоящий provider нужно верифицировать", "isCorrect": true },
+        { "text": "Потому что в Pact нет запросов", "isCorrect": false },
+        { "text": "Потому что Playwright не поддерживает API", "isCorrect": false }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "slug": "github-copilot-features",
+  "title": "Features Quiz",
+  "description": "Check your understanding of Copilot Chat, CLI, slash commands, and integrations.",
+  "difficulty": "BEGINNER",
+  "questions": [
+    {
+      "text": "What is the keyboard shortcut to accept a GitHub Copilot inline suggestion in VS Code?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "Enter", "isCorrect": false },
+        { "text": "Ctrl + Space", "isCorrect": false },
+        { "text": "Tab", "isCorrect": true },
+        { "text": "Ctrl + Enter", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Which Copilot Chat slash command generates unit tests for selected code?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 2,
+      "options": [
+        { "text": "/doc", "isCorrect": false },
+        { "text": "/fix", "isCorrect": false },
+        { "text": "/tests", "isCorrect": true },
+        { "text": "/run", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "What does the @workspace participant in Copilot Chat do?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 3,
+      "options": [
+        { "text": "Switches your VS Code workspace configuration", "isCorrect": false },
+        { "text": "Allows you to ask questions about your entire project codebase", "isCorrect": true },
+        { "text": "Opens a new workspace window", "isCorrect": false },
+        { "text": "Shares your workspace with another developer", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "What is the primary purpose of GitHub Copilot CLI?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "To deploy applications to cloud providers via the terminal", "isCorrect": false },
+        { "text": "To replace the GitHub CLI (gh) tool entirely", "isCorrect": false },
+        { "text": "To bring AI assistance to terminal commands — explaining and suggesting shell commands", "isCorrect": true },
+        { "text": "To generate GitHub Actions workflow files", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "GitHub Copilot can automatically generate a pull request description based on the code diff.",
+      "type": "TRUE_FALSE",
+      "order": 5,
+      "options": [
+        { "text": "True", "isCorrect": true },
+        { "text": "False", "isCorrect": false }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "slug": "github-copilot-introduction",
+  "title": "Introduction Quiz",
+  "description": "Test your knowledge of GitHub Copilot basics, history, and pricing.",
+  "difficulty": "BEGINNER",
+  "questions": [
+    {
+      "text": "Who developed GitHub Copilot?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "GitHub alone", "isCorrect": false },
+        { "text": "GitHub in collaboration with OpenAI", "isCorrect": true },
+        { "text": "Microsoft alone", "isCorrect": false },
+        { "text": "Google and GitHub", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Which of the following IDEs does GitHub Copilot support?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 2,
+      "options": [
+        { "text": "Only Visual Studio Code", "isCorrect": false },
+        { "text": "VS Code and JetBrains IDEs only", "isCorrect": false },
+        { "text": "VS Code, JetBrains IDEs, Visual Studio, and Neovim", "isCorrect": true },
+        { "text": "Only cloud-based IDEs", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "What is GitHub Copilot Workspace?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 3,
+      "options": [
+        { "text": "A browser extension for GitHub", "isCorrect": false },
+        { "text": "A task-centric environment where you can implement GitHub Issues with AI assistance across multiple files", "isCorrect": true },
+        { "text": "A collaborative live-coding environment for teams", "isCorrect": false },
+        { "text": "A Docker-based cloud development container", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Which GitHub Copilot tier is available for free?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "The Professional tier for all developers", "isCorrect": false },
+        { "text": "All GitHub users get Copilot free", "isCorrect": false },
+        { "text": "Students and verified open-source maintainers via GitHub Education", "isCorrect": true },
+        { "text": "Only users with a GitHub Pro subscription", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "GitHub Copilot was first announced as a technical preview in 2021.",
+      "type": "TRUE_FALSE",
+      "order": 5,
+      "options": [
+        { "text": "True", "isCorrect": true },
+        { "text": "False", "isCorrect": false }
+      ]
+    }
+  ]
+}

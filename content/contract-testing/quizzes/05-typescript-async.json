@@ -1,0 +1,63 @@
+{
+  "slug": "contract-testing-typescript-async",
+  "title": "TypeScript, Promise и async/await",
+  "description": "Как работают Promise и async/await в тестах API-клиента.",
+  "difficulty": "INTERMEDIATE",
+  "questions": [
+    {
+      "text": "Что возвращает функция, объявленная async?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "Только string", "isCorrect": false },
+        { "text": "Синхронное значение без Promise", "isCorrect": false },
+        { "text": "Promise", "isCorrect": true },
+        { "text": "HTTP response автоматически", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Что произойдёт при await client.getLoan(123), если Promise rejected?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 2,
+      "options": [
+        { "text": "В result попадёт undefined, а выполнение обязательно продолжится", "isCorrect": false },
+        { "text": "Ошибка станет статусом 200", "isCorrect": false },
+        { "text": "В консоль автоматически выведется unknown", "isCorrect": false },
+        { "text": "В текущей async-функции будет выброшена ошибка; следующие строки не выполнятся без обработки", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Что произойдёт с console.log(result) после отклонённого await без try/catch?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 3,
+      "options": [
+        { "text": "Выведет rejected", "isCorrect": false },
+        { "text": "Строка не выполнится", "isCorrect": true },
+        { "text": "Выведет Promise<void>", "isCorrect": false },
+        { "text": "Выведет null", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Если вызвать async-функцию без await, что обычно окажется в переменной?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "Гарантированно готовый JSON", "isCorrect": false },
+        { "text": "Строка unknown", "isCorrect": false },
+        { "text": "Обязательно исключение", "isCorrect": false },
+        { "text": "Promise, который может быть ещё не завершён", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Как в тесте проверить ожидаемый reject Promise?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 5,
+      "options": [
+        { "text": "Игнорировать ошибку", "isCorrect": false },
+        { "text": "Использовать rejects matcher или try/catch с assertions", "isCorrect": true },
+        { "text": "Ожидать HTTP 200", "isCorrect": false },
+        { "text": "Удалить await во всех случаях", "isCorrect": false }
+      ]
+    }
+  ]
+}

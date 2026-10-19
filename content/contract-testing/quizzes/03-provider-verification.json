@@ -1,0 +1,63 @@
+{
+  "slug": "contract-testing-provider-verification",
+  "title": "Provider Verification",
+  "description": "Provider verification, provider states и несовместимые изменения контракта.",
+  "difficulty": "INTERMEDIATE",
+  "questions": [
+    {
+      "text": "Что проверяет provider verification?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "Что mock provider отвечает по мокам", "isCorrect": false },
+        { "text": "Что реальный provider способен выполнить interactions из pact-файла", "isCorrect": true },
+        { "text": "Только линтинг TypeScript", "isCorrect": false },
+        { "text": "Что пользователь может войти через UI", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Если provider возвращает 500 вместо ожидаемого 200, что произойдёт?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 2,
+      "options": [
+        { "text": "Верификация пройдёт, ведь ответ получен", "isCorrect": false },
+        { "text": "Pact преобразует 500 в 200", "isCorrect": false },
+        { "text": "Promise обязательно останется pending", "isCorrect": false },
+        { "text": "Верификация не пройдёт", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Зачем нужны provider states?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 3,
+      "options": [
+        { "text": "Заменить токен JWT", "isCorrect": false },
+        { "text": "Подготовить состояние или данные для конкретной interaction", "isCorrect": true },
+        { "text": "Отсортировать Pact-файлы", "isCorrect": false },
+        { "text": "Сменить версию Node.js", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Каким должно быть окружение для provider verification?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "Всегда только production", "isCorrect": false },
+        { "text": "Случайным с непредсказуемыми данными", "isCorrect": false },
+        { "text": "Детерминированным и управляемым", "isCorrect": true },
+        { "text": "Только браузерным", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Что означает несовместимое (breaking) изменение контракта?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 5,
+      "options": [
+        { "text": "Изменился цвет кнопки", "isCorrect": false },
+        { "text": "Увеличилось покрытие тестов", "isCorrect": false },
+        { "text": "Изменилось имя ветки без изменения API", "isCorrect": false },
+        { "text": "Provider больше не удовлетворяет ожиданиям действующего consumer", "isCorrect": true }
+      ]
+    }
+  ]
+}

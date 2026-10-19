@@ -1,0 +1,63 @@
+{
+  "slug": "contract-testing-request-filter-ci",
+  "title": "requestFilter, аутентификация и CI/CD",
+  "description": "requestFilter, токены при verification и запуск контрактов в CI.",
+  "difficulty": "ADVANCED",
+  "questions": [
+    {
+      "text": "Для чего нужен requestFilter во время Pact provider verification?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 1,
+      "options": [
+        { "text": "Автоматически исправить production API", "isCorrect": false },
+        { "text": "Сгенерировать consumer Pact без теста", "isCorrect": false },
+        { "text": "Изменить исходящий verification request перед отправкой provider", "isCorrect": true },
+        { "text": "Изменить браузерные cookies везде", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Какой риск у безусловной замены любого Authorization header на valid token?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 2,
+      "options": [
+        { "text": "Provider всегда начнёт отвечать 500", "isCorrect": false },
+        { "text": "Pact-файл перестанет существовать", "isCorrect": false },
+        { "text": "Негативные тесты с invalid token могут ложно пройти или проверить не тот сценарий", "isCorrect": true },
+        { "text": "Это гарантирует проверку 401", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Как сохранить сценарий с намеренно неверным токеном?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 3,
+      "options": [
+        { "text": "Всегда добавлять валидный токен", "isCorrect": false },
+        { "text": "Отключить все provider tests", "isCorrect": false },
+        { "text": "Игнорировать проверку статуса", "isCorrect": false },
+        { "text": "Сделать requestFilter условным и не заменять специально помеченный invalid token", "isCorrect": true }
+      ]
+    },
+    {
+      "text": "Если рабочий verification token меняется еженедельно, как избежать правок тестового кода?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 4,
+      "options": [
+        { "text": "Вписать токен во все consumer tests", "isCorrect": false },
+        { "text": "Получать его из переменных окружения/secret manager или через механизм обновления токена", "isCorrect": true },
+        { "text": "Коммитить токен в Pact-файл", "isCorrect": false },
+        { "text": "Отключить авторизацию production", "isCorrect": false }
+      ]
+    },
+    {
+      "text": "Что полезно запускать в CI для контрактов?",
+      "type": "MULTIPLE_CHOICE",
+      "order": 5,
+      "options": [
+        { "text": "Только ручное сравнение скриншотов", "isCorrect": false },
+        { "text": "Только npm install без тестов", "isCorrect": false },
+        { "text": "Только UI на production", "isCorrect": false },
+        { "text": "Consumer tests, публикацию pact и provider verification с контролем совместимости", "isCorrect": true }
+      ]
+    }
+  ]
+}

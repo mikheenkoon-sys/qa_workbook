@@ -1,3 +1,5 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Option, Question } from "@prisma/client";
@@ -5,7 +7,7 @@ import type { Option, Question } from "@prisma/client";
 interface QuestionCardProps {
   question: Question & { options: Option[] };
   selectedOptionId: string | undefined;
-  onSelect: (optionId: string) => void;
+  onSelect?: (optionId: string) => void;
   /** Show correct/wrong state after submission */
   revealed?: boolean;
 }
@@ -31,7 +33,7 @@ export function QuestionCard({ question, selectedOptionId, onSelect, revealed }:
           return (
             <button
               key={option.id}
-              onClick={() => !revealed && onSelect(option.id)}
+              onClick={() => !revealed && onSelect?.(option.id)}
               disabled={revealed}
               className={cn(
                 "w-full rounded-lg border px-4 py-3 text-left text-sm transition-colors",

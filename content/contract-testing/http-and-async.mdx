@@ -1,0 +1,150 @@
+# HTTP-статусы, Promise и async/await
+
+## Что важно зафиксировать в контракте
+
+Для HTTP-контракта значимы те части запроса и ответа, от которых **зависит consumer**:
+
+- HTTP **method** и **path**;
+- необходимые **headers** (например, `Authorization`, `Content-Type`, `Accept`);
+- **query**-параметры и **body**;
+- **статус-код** и структура тела ответа;
+- значимые **response headers** (`Location`, `Content-Type`).
+
+Чего **не стоит** фиксировать: `Date`, `Server`, `Content-Length`, трассировочные заголовки — они меняются без вреда для consumer.
+
+## Основные HTTP-статусы
+
+| Код | Значение | Заметка |
+|-----|----------|---------|
+| `200 OK` | Успешная обработка запроса | Для GET, PUT, PATCH |
+| `201 Created` | Ресурс создан | Часто с заголовком `Location` |
+| `204 No Content` | Успех без тела ответа | Например, DELETE |
+| `400 Bad Request` | Ошибка запроса клиента | Некорректное тело или параметры |
+| `401 Unauthorized` | Отсутствуют или недействительны учётные данные | Проблема с **аутентификацией** |
+| `403 Forbidden` | Доступ запрещён | Аутентификация может быть успешной, но прав недостаточно |
+| `404 Not Found` | Ресурс не найден | |
+| `409 Conflict` | Конфликт состояния | Например, дубликат |
+| `422 Unprocessable Entity` | Запрос корректен синтаксически, но не проходит валидацию | |
+| `500 Internal Server Error` | Внутренняя ошибка сервера | Серверная ошибка |
+| `503 Service Unavailable` | Сервис временно недоступен | |
+
+Общее правило: **4xx** — ошибки клиента, **5xx** — ошибки сервера. Сравните:
+
+- `401` — «кто вы? предъявите credentials»;
+- `403` — «я вас знаю, но вам нельзя».
+
+## Пример: POST с созданием ресурса
+
+```typescript
+provider
+  .given("loan application is valid")
+  .uponReceiving("a request to create a loan")
+  .withRequest({
+    method: "POST",
+    path: "/loans",
+    headers: { "Content-Type": "application/json" },
+    body: { amount: 1000, currency: "USD" },
+  })
+  .willRespondWith({
+    status: 201,
+    headers: { Location: regex(/\/loans\/\d+$/, "/loans/123") },
+    body: { id: integer(123), status: "PENDING" },
+  });
+```
+
+И негативный сценарий:
+
+```typescript
+provider
+  .given("loan application is invalid")
+  .uponReceiving("a request to create a loan with negative amount")
+  .withRequest({
+    method: "POST",
+    path: "/loans",
+    headers: { "Content-Type": "application/json" },
+    body: { amount: -5, currency: "USD" },
+  })
+  .willRespondWith({
+    status: 422,
+    body: { error: string("amount must be positive") },
+  });
+```
+
+## Query-параметры
+
+```typescript
+.withRequest({
+  method: "GET",
+  path: "/loans",
+  query: { status: "ACTIVE", page: "1" },
+})
+```
+
+В контракте значения query всегда строки. Не включайте параметры, от которых consumer не зависит.
+
+## Promise и async/await в TypeScript
+
+API-клиент в тестах почти всегда асинхронный. Нужно уверенно понимать базовые правила:
+
+- Функция, объявленная `async`, **всегда возвращает `Promise`**.
+- Если вызвать её **без `await`**, в переменной окажется Promise, который может быть ещё не завершён.
+- Если Promise **rejected**, то `await` выбрасывает ошибку: следующие строки в текущей функции **не выполнятся**, пока ошибка не обработана.
+
+```typescript
+async function example() {
+  const result = await client.getLoan(123); // Promise rejected → throw
+  console.log(result);                       // не выполнится
+}
+```
+
+### Типичные ошибки
+
+```typescript
+// 1. Забыли await — тест завершится раньше, чем придёт ответ
+it("loads loan", () => {
+  client.getLoan(123);          // Promise «потерян»
+});
+
+// 2. Забыли return/await — assertion не будет дождан
+it("loads loan", () => {
+  client.getLoan(123).then((loan) => expect(loan.id).toBe(123));
+});
+
+// Правильно
+it("loads loan", async () => {
+  const loan = await client.getLoan(123);
+  expect(loan.id).toBe(123);
+});
+```
+
+### Как проверять ожидаемый reject
+
+```typescript
+// Jest / Vitest
+await expect(client.getLoan(999)).rejects.toThrow();
+
+// Либо try/catch с assertions
+try {
+  await client.getLoan(999);
+  throw new Error("Expected request to fail");
+} catch (error) {
+  expect(error).toBeInstanceOf(ApiError);
+}
+```
+
+> Не убирайте `await` ради «исправления» теста и не игнорируйте ошибку — так можно получить ложно зелёный результат.
+
+Параллельные запросы:
+
+```typescript
+const [loan, user] = await Promise.all([
+  client.getLoan(123),
+  client.getUser(7),
+]);
+```
+
+## Итоги
+
+- Фиксируйте в контракте только то, от чего зависит consumer.
+- Различайте 401 (аутентификация) и 403 (авторизация), 4xx и 5xx.
+- `async` → `Promise`; rejected `await` → исключение; без `await` assertions не дождутся результата.

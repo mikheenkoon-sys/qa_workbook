@@ -50,7 +50,6 @@ export function ResultsSummary({ attempt, chapterSlug }: ResultsSummaryProps) {
                 <QuestionCard
                   question={answer.question}
                   selectedOptionId={answer.selectedOptionId}
-                  onSelect={() => {}}
                   revealed
                 />
               </CardContent>
@@ -59,10 +58,17 @@ export function ResultsSummary({ attempt, chapterSlug }: ResultsSummaryProps) {
       </div>
 
       <div className="flex gap-3">
-        <Button variant="outline" render={<Link href={`/practice/${chapterSlug}`} />}>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href={`/practice/${chapterSlug}`} />}
+        >
           Back to Quizzes
         </Button>
-        <Button render={<Link href={`/practice/${chapterSlug}/${attempt.quiz.slug}`} />}>
+        <Button
+          nativeButton={false}
+          render={<Link href={`/practice/${chapterSlug}/${attempt.quiz.slug}`} />}
+        >
           Try Again
         </Button>
       </div>

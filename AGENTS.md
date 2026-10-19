@@ -65,7 +65,7 @@ QA Workbook is a learning and practice platform for QA engineers. It provides an
 
 ### 5. Content vs Database
 - Knowledge articles → MDX files in `content/`
-- Quiz questions → Prisma database (seeded from `questions.ts`)
+- Quiz questions → Prisma database (seeded from `content/<chapter>/quizzes/*.json`)
 - Do not mix concerns between these two systems
 
 ## Path Aliases
