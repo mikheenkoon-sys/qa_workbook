@@ -1,0 +1,88 @@
+# GitHub Copilot Features
+
+GitHub Copilot has evolved from a simple code-completion tool into a comprehensive AI development assistant. Here is an overview of its major features.
+
+## 1. Inline Code Completion
+
+The core Copilot experience — ghost text appears as you type and you press `Tab` to accept.
+
+**Keyboard shortcuts (VS Code)**
+
+| Action | Windows / Linux | macOS |
+|--------|-----------------|-------|
+| Accept suggestion | `Tab` | `Tab` |
+| Dismiss suggestion | `Esc` | `Esc` |
+| Next suggestion | `Alt + ]` | `Option + ]` |
+| Previous suggestion | `Alt + [` | `Option + [` |
+| Open Copilot panel | `Ctrl + Shift + I` | `Cmd + Shift + I` |
+
+**Tip:** Write a descriptive comment before your code to improve suggestion quality:
+
+```python
+# Parse a JWT token and return the decoded payload, raise ValueError if invalid
+def decode_jwt(token: str) -> dict:
+```
+
+## 2. GitHub Copilot Chat
+
+A conversational AI assistant embedded directly in your IDE. Unlike inline completions, Chat supports multi-turn dialogue about your code.
+
+### Slash Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/explain` | Explain what the selected code does |
+| `/fix` | Suggest a fix for a bug or issue |
+| `/tests` | Generate unit tests for selected code |
+| `/doc` | Generate inline documentation |
+| `/simplify` | Simplify complex logic |
+| `/optimize` | Suggest performance improvements |
+
+### Chat Participants (`@`)
+
+| Participant | Scope |
+|-------------|-------|
+| `@workspace` | Ask questions about your entire project |
+| `@vscode` | Get help with VS Code commands and settings |
+| `@terminal` | Get help constructing terminal commands |
+
+## 3. GitHub Copilot CLI
+
+Brings AI assistance to the command line via the GitHub CLI extension:
+
+```bash
+# Install
+gh extension install github/gh-copilot
+
+# Explain what a command does
+gh copilot explain "awk '{print $2}' access.log | sort | uniq -c | sort -rn"
+
+# Suggest a command from a natural-language description
+gh copilot suggest "recursively find all .log files older than 7 days and delete them"
+```
+
+## 4. Copilot for Pull Requests
+
+When you open a PR on GitHub, Copilot can:
+
+- **Auto-generate a PR description** based on the diff
+- **Post inline code-review suggestions** as comments
+- **Summarize the changes** for reviewers unfamiliar with the area
+
+## 5. Copilot Workspace
+
+A task-centric AI environment for tackling entire GitHub Issues:
+
+1. Open an Issue in GitHub Copilot Workspace
+2. Review the AI-generated implementation plan
+3. Edit and refine the plan as needed
+4. Copilot implements changes across multiple files
+5. Review the result, iterate, then open a PR
+
+## 6. Copilot on GitHub.com
+
+Without opening an IDE, you can use Copilot directly on any repository page to:
+
+- Ask questions about the codebase
+- Get explanations for specific files or functions
+- Generate code snippets inline

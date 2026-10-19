@@ -1,0 +1,82 @@
+# GitHub Copilot: Usage Tips & Best Practices
+
+Getting the most from GitHub Copilot requires knowing how to communicate your intent effectively and where to apply — and avoid — its suggestions.
+
+## Write Descriptive Comments First
+
+The most reliable way to guide Copilot is a clear comment above the code you want it to generate.
+
+**Less effective:**
+```javascript
+// sort
+function sortUsers(users) {
+```
+
+**More effective:**
+```javascript
+// Sort users alphabetically by lastName, then by firstName for ties.
+// Returns a new sorted array without mutating the input.
+function sortUsers(users) {
+```
+
+## Use Clear Function Signatures
+
+A well-named function with typed parameters guides Copilot even without a comment:
+
+```typescript
+async function retryWithExponentialBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number,
+  initialDelayMs: number
+): Promise<T>
+```
+
+## Keep Relevant Files Open
+
+Copilot uses all open editor tabs as context. Keep related files open — type definitions, interfaces, test utilities, or example files — so Copilot can follow your existing patterns.
+
+## Test Generation Workflow for QA Engineers
+
+1. Open (or write) the function or class you want to test
+2. Create a new `*.test.ts` file in the same directory
+3. Start with a comment: `// Unit tests for UserAuthService`
+4. Press `Enter` — Copilot will suggest the first describe block
+5. Accept, then let it continue generating individual test cases
+6. Review each suggestion; edit assertions to match actual requirements
+
+## Prompt Iteration
+
+If the first suggestion is not quite right, do not just dismiss it. Try:
+
+- Adding more specificity to your comment
+- Pressing `Option + ]` / `Alt + ]` to see alternative suggestions
+- Typing the first few characters of the construct you want to confirm direction
+- Using Copilot Chat with `/fix` or a follow-up question to refine
+
+## Limitations to Know
+
+| Limitation | Details |
+|------------|---------|
+| Training cutoff | Copilot may suggest deprecated APIs or outdated patterns |
+| No live internet access | It cannot fetch current documentation or changelogs |
+| Can hallucinate | Suggestions look plausible but may be functionally wrong — always review |
+| License risk | Occasional verbatim reproductions of training data — check for similar existing code |
+| Context window | Very large files may be partially ignored |
+
+## Privacy and Security
+
+- Code snippets from your editor are sent to GitHub servers for processing
+- **Individual plan**: your code may be used to improve Copilot models (opt out in Settings → Copilot)
+- **Business / Enterprise plan**: GitHub states customer code is not used for model training
+- **Never** have secrets, API keys, `.env` files, or PII visible when Copilot is active
+
+## When to Be Cautious
+
+Treat every Copilot suggestion as a draft from a junior colleague — read it before you ship it:
+
+- **Security-critical code** (auth, encryption, input validation) — always review carefully
+- **Business logic** — Copilot does not know your domain rules
+- **Performance-sensitive algorithms** — benchmark before assuming the suggestion is optimal
+- **Any code you do not fully understand** — understanding ownership matters for maintenance
+
+The goal is to accelerate work you already know how to do, not to delegate decisions you have not yet made.
